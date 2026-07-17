@@ -1,9 +1,12 @@
 # CLAUDE.md — textbook template (design note)
 
-**Status: BUILT (v1.0.0), extracted at N=2 from `../llm-textbook` and
-`../foundation-models-bio`.** The working [copier](https://copier.app/) template
-lives in `template/` with its questions in `copier.yml`; `README.md` is the
-user-facing guide. This file is kept as the *design rationale* — why copier, the
+**Status: BUILT (v1.1.0), extracted at N=2 from `../llm-textbook` and
+`../foundation-models-bio`; first exercised by `../calculus-intuitively`.** The
+working [copier](https://copier.app/) template lives in `template/` with its
+questions in `copier.yml`; `README.md` is the user-facing guide. Engine changes
+are tagged (semver) and pulled into books with `copier update`; v1.1.0 bumped the
+`deploy.yml` GitHub Actions to their Node-24 majors (checkout v5, setup-python
+v6, configure-pages v6, upload-pages-artifact v5, deploy-pages v5). This file is kept as the *design rationale* — why copier, the
 engine/content seam, the repo-topology decision, and the conventions promoted
 into the template. Read `README.md` to use the template; read on here for why it
 is shaped the way it is.
