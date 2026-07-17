@@ -1,0 +1,425 @@
+"""Generate every figure for *{{ book_title }}* as SVG.
+
+Two kinds of figure live here. **Diagrams** (concepts) are hand-authored SVG
+emitted from Python string templates. **Plots** (anything quantitative) are
+matplotlib, saved transparent with `svg.fonttype: "none"` so their text inherits
+the page fonts. Both draw from the palette constants below, which mirror
+`assets/style.css` — keep them in sync.
+
+Run with `python figures/make_figures.py`. Each `fig_*()` returns the path it
+wrote and is listed in `FIGURES`; `main()` runs them all. The cover and icons
+carry the book's visual identity (an abstract chain of connected nodes) and are
+written to the assets root.
+"""
+
+from __future__ import annotations
+
+import textwrap
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parent.parent
+OUTPUT_DIR = ROOT / "assets" / "figures"
+ASSETS_DIR = ROOT / "assets"
+
+# The book's palette, mirrored from assets/style.css. Keep these in sync.
+PAPER = "#f4f3ee"
+INK = "#17181b"
+INK_SOFT = "#3b3d42"
+MUTED = "#6a6d73"
+RULE = "#e4e3dd"
+RULE_STRONG = "#cfcdc4"
+ACCENT = "#274b6d"
+ACCENT_SOFT = "#eaf0f6"
+AMBER = "#9c6b12"
+VIOLET = "#6b4f9c"
+BRICK = "#b04a3f"
+
+SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+SERIF = "'Charter', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif"
+MONO = "'SF Mono', 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace"
+
+
+def write_svg(name: str, svg: str) -> Path:
+    """Write a raw SVG string to the figures directory and return its path."""
+    assert name.endswith(".svg"), f"Figure name must end in .svg, got '{name}'."
+    assert svg.lstrip().startswith("<svg"), f"Figure '{name}' is not an SVG document."
+    path = OUTPUT_DIR / name
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def write_root_asset(name: str, svg: str) -> Path:
+    """Write a raw SVG string to the assets root (cover, icon) and return its path."""
+    assert name.endswith(".svg"), f"Asset name must end in .svg, got '{name}'."
+    assert svg.lstrip().startswith("<svg"), f"Asset '{name}' is not an SVG document."
+    path = ASSETS_DIR / name
+    path.write_text(svg, encoding="utf-8")
+    return path
+
+
+def svg_doc(width: float, height: float, label: str, body: list[str]) -> str:
+    """Wrap SVG body elements in a document with the book's default font.
+
+    `label` becomes the accessible description; keep it plain ASCII so it needs
+    no escaping. `body` is the list of element strings, in draw order.
+    """
+    head = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'font-family="{SANS}" role="img" aria-label="{label}">'
+    )
+    return "\n".join([head, *body, "</svg>"])
+
+
+def arrow_marker(color: str, name: str) -> str:
+    """Return a `<defs>` block holding one triangular arrowhead marker."""
+    return (
+        f'<defs><marker id="{name}" viewBox="0 0 10 10" refX="9" refY="5" '
+        f'markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+        f'<path d="M 0 0 L 10 5 L 0 10 z" fill="{color}"/></marker></defs>'
+    )
+
+
+def node_box(
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    text: str,
+    *,
+    fill: str = "#ffffff",
+    stroke: str = RULE_STRONG,
+    text_fill: str = INK,
+    font_size: float = 12,
+    weight: int = 400,
+) -> list[str]:
+    """Return a rounded rectangle with centered text: the book's labelled chip."""
+    stroke_attr = "none" if stroke == "none" else stroke
+    return [
+        f'<rect x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="6" '
+        f'fill="{fill}" stroke="{stroke_attr}"/>',
+        f'<text x="{x + w / 2:.1f}" y="{y + h / 2 + font_size * 0.35:.1f}" '
+        f'font-size="{font_size}" font-weight="{weight}" text-anchor="middle" '
+        f'fill="{text_fill}">{text}</text>',
+    ]
+
+
+def eyebrow(x: float, y: float, text: str, fill: str = MUTED) -> str:
+    """Return a small uppercase section label, as used across the diagrams."""
+    return (
+        f'<text x="{x:.1f}" y="{y:.1f}" font-size="11" font-weight="700" '
+        f'fill="{fill}" letter-spacing="1">{text}</text>'
+    )
+
+
+def style_plot() -> None:
+    """Apply the book's typographic style to matplotlib's global state."""
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["DejaVu Sans", "Helvetica", "Arial"],
+            "font.size": 9,
+            "text.color": INK,
+            "axes.edgecolor": RULE_STRONG,
+            "axes.labelcolor": INK_SOFT,
+            "axes.labelsize": 9,
+            "axes.titlesize": 10,
+            "axes.titleweight": "bold",
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "xtick.color": MUTED,
+            "ytick.color": MUTED,
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "grid.color": RULE,
+            "grid.linewidth": 0.8,
+            "legend.frameon": False,
+            "legend.fontsize": 8,
+            "svg.fonttype": "none",  # Keep text as text so it inherits page fonts.
+        }
+    )
+
+
+def save_plot(fig: plt.Figure, name: str) -> Path:
+    """Save a matplotlib figure as a transparent SVG and close it."""
+    assert name.endswith(".svg"), f"Figure name must end in .svg, got '{name}'."
+    path = OUTPUT_DIR / name
+    fig.savefig(path, format="svg", transparent=True, bbox_inches="tight")
+    plt.close(fig)
+    return path
+
+
+# ---------------------------------------------------------------------------
+# Example figure. One worked diagram so a drafter has a pattern to copy; it is
+# referenced by content/transformer.md. Delete or replace it as real figures
+# land, and add each new fig_*() to the FIGURES tuple at the bottom.
+# ---------------------------------------------------------------------------
+
+
+def fig_example_pipeline() -> Path:
+    """Diagram: a generic three-stage pipeline, shown as data flowing into a model."""
+    width, height = 640, 200
+    body = [arrow_marker(ACCENT, "arrow")]
+    body.append(eyebrow(24, 34, "THE SHAPE OF A CHAPTER"))
+
+    stages = [
+        ("Input", "raw data or\na sequence", ACCENT_SOFT),
+        ("Model", "the method\nunder study", "#ffffff"),
+        ("Output", "a prediction\nor a decision", ACCENT_SOFT),
+    ]
+    box_w, box_h, gap = 168, 96, 60
+    x = 24
+    for i, (title, detail, fill) in enumerate(stages):
+        y = 66
+        body.append(
+            f'<rect x="{x}" y="{y}" width="{box_w}" height="{box_h}" rx="10" '
+            f'fill="{fill}" stroke="{RULE_STRONG}"/>'
+        )
+        body.append(
+            f'<text x="{x + box_w / 2:.1f}" y="{y + 30}" font-size="15" '
+            f'font-weight="700" text-anchor="middle" fill="{INK}">{title}</text>'
+        )
+        for j, line in enumerate(detail.split("\n")):
+            body.append(
+                f'<text x="{x + box_w / 2:.1f}" y="{y + 54 + j * 18}" font-size="12" '
+                f'text-anchor="middle" fill="{INK_SOFT}">{line}</text>'
+            )
+        if i < len(stages) - 1:
+            ax = x + box_w + 6
+            body.append(
+                f'<line x1="{ax}" y1="{y + box_h / 2}" x2="{ax + gap - 12}" '
+                f'y2="{y + box_h / 2}" stroke="{ACCENT}" stroke-width="2" '
+                f'marker-end="url(#arrow)"/>'
+            )
+        x += box_w + gap
+
+    return write_svg(
+        "example-pipeline.svg",
+        svg_doc(width, height, "A generic input-model-output pipeline.", body),
+    )
+
+
+# ---------------------------------------------------------------------------
+# The cover and the icons.
+#
+# One motif carries the book's identity: an abstract chain of connected nodes,
+# with dashed links bridging nodes that are far apart in the chain but close in
+# space. It is deliberately topic-neutral — replace it with a motif that fits
+# your subject once the book has a point of view.
+# ---------------------------------------------------------------------------
+
+
+def motif_svg(
+    points: list[tuple[float, float]],
+    links: list[tuple[int, int]],
+    node_r: float,
+    stroke_w: float,
+) -> str:
+    """Emit the identity motif: a backbone path, dashed links, and graded nodes.
+
+    `points` are node centers in draw order; `links` are index pairs joined by a
+    dashed line drawn behind the backbone. The final node is amber.
+    """
+    parts = []
+    for i, j in links:
+        xi, yi = points[i]
+        xj, yj = points[j]
+        parts.append(
+            f'<line x1="{xi:.1f}" y1="{yi:.1f}" x2="{xj:.1f}" y2="{yj:.1f}" '
+            f'stroke="{MUTED}" stroke-width="{stroke_w * 0.5:.2f}" '
+            f'stroke-dasharray="4 3" opacity="0.5"/>'
+        )
+    path_d = "M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in points)
+    parts.append(
+        f'<path d="{path_d}" fill="none" stroke="{ACCENT}" '
+        f'stroke-width="{stroke_w:.2f}" stroke-linecap="round" '
+        f'stroke-linejoin="round" opacity="0.85"/>'
+    )
+    n = len(points)
+    for idx, (x, y) in enumerate(points):
+        last = idx == n - 1
+        fill = AMBER if last else ACCENT
+        opacity = 1.0 if last else 0.42 + 0.58 * (idx + 1) / n
+        parts.append(
+            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{node_r:.1f}" fill="{fill}" '
+            f'opacity="{opacity:.2f}"/>'
+        )
+    return "\n".join(parts)
+
+
+# A folded chain: a top row left-to-right, a turn, a bottom row back, with a few
+# cross-row links. Shared by the cover and (scaled) the icons.
+COVER_POINTS = [
+    (110, 600),
+    (178, 600),
+    (246, 600),
+    (314, 600),
+    (382, 600),
+    (450, 600),
+    (500, 636),
+    (450, 672),
+    (382, 672),
+    (314, 672),
+    (246, 672),
+    (178, 672),
+]
+COVER_LINKS = [(1, 11), (2, 10), (3, 9), (4, 8)]
+
+ICON_POINTS = [
+    (42, 72),
+    (76, 72),
+    (110, 72),
+    (144, 72),
+    (164, 90),
+    (144, 108),
+    (110, 108),
+    (76, 108),
+]
+ICON_LINKS = [(1, 7), (2, 6)]
+
+
+def fig_cover() -> Path:
+    """The book cover: title over the identity motif, framed like a monograph."""
+    width, height = 640, 960
+    # Wrap the title (large serif) and subtitle (small sans) to the cover width
+    # so any book's title fits without hand-tuning.
+    title = "{{ book_title }}"
+    subtitle = "{{ book_subtitle }}"
+    title_lines = textwrap.wrap(title, width=14) or ["Untitled"]
+    subtitle_lines = textwrap.wrap(subtitle, width=42)[:2]
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
+        f'role="img" aria-label="Book cover: {{ book_title }}.">',
+        f'<rect width="{width}" height="{height}" fill="{PAPER}"/>',
+        f'<rect x="26" y="26" width="{width - 52}" height="{height - 52}" '
+        f'fill="none" stroke="{RULE_STRONG}" stroke-width="1.5"/>',
+        f'<text x="72" y="152" font-family="{SANS}" font-size="16" '
+        f'font-weight="650" letter-spacing="5" fill="{ACCENT}">A TEXTBOOK</text>',
+    ]
+    for i, line in enumerate(title_lines):
+        parts.append(
+            f'<text x="68" y="{232 + i * 72}" font-family="{SERIF}" font-size="58" '
+            f'font-weight="700" fill="{INK}">{line}</text>'
+        )
+
+    parts.append(motif_svg(COVER_POINTS, COVER_LINKS, node_r=14, stroke_w=3))
+
+    parts.append(
+        f'<path d="M 72 830 L 148 830" stroke="{RULE_STRONG}" stroke-width="1.5"/>'
+    )
+    for i, line in enumerate(subtitle_lines):
+        parts.append(
+            f'<text x="72" y="{862 + i * 23}" font-family="{SANS}" font-size="15.5" '
+            f'fill="{MUTED}">{line}</text>'
+        )
+    parts.append("</svg>")
+    return write_root_asset("cover.svg", "\n".join(parts))
+
+
+def fig_icon() -> Path:
+    """The favicon: the identity motif alone on a rounded paper tile."""
+    parts = [
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" '
+        'aria-label="Site icon: a short chain of connected nodes.">',
+        f'<rect width="180" height="180" rx="36" fill="{PAPER}"/>',
+        motif_svg(ICON_POINTS, ICON_LINKS, node_r=8, stroke_w=2.4),
+        "</svg>",
+    ]
+    return write_root_asset("icon.svg", "\n".join(parts))
+
+
+def fig_touch_icon() -> Path:
+    """The apple-touch-icon: the favicon motif, full-bleed PNG (iOS rounds it).
+
+    iOS does not accept SVG here, so matplotlib re-draws the same geometry as
+    `fig_icon` at exactly 180 by 180 pixels.
+    """
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Circle, Rectangle
+
+    dpi = 100
+    fig = plt.figure(figsize=(1.8, 1.8), dpi=dpi)
+    ax = fig.add_axes((0.0, 0.0, 1.0, 1.0))
+    ax.set_xlim(0, 180)
+    ax.set_ylim(180, 0)  # Flip y so the geometry matches the SVG coordinates.
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.add_patch(Rectangle((0, 0), 180, 180, facecolor=PAPER, edgecolor="none"))
+
+    px = 72 / dpi  # One SVG stroke pixel is this many matplotlib points.
+
+    for i, j in ICON_LINKS:
+        xi, yi = ICON_POINTS[i]
+        xj, yj = ICON_POINTS[j]
+        ax.add_line(
+            Line2D(
+                [xi, xj],
+                [yi, yj],
+                color=MUTED,
+                linewidth=1.2 * px,
+                linestyle=(0, (4, 3)),
+                alpha=0.5,
+            )
+        )
+
+    xs = [p[0] for p in ICON_POINTS]
+    ys = [p[1] for p in ICON_POINTS]
+    ax.add_line(
+        Line2D(
+            xs,
+            ys,
+            color=ACCENT,
+            linewidth=2.4 * px,
+            solid_capstyle="round",
+            solid_joinstyle="round",
+            alpha=0.85,
+        )
+    )
+
+    n = len(ICON_POINTS)
+    for idx, (x, y) in enumerate(ICON_POINTS):
+        last = idx == n - 1
+        ax.add_patch(
+            Circle(
+                (x, y),
+                radius=8,
+                facecolor=AMBER if last else ACCENT,
+                edgecolor="none",
+                alpha=1.0 if last else 0.42 + 0.58 * (idx + 1) / n,
+            )
+        )
+
+    path = ASSETS_DIR / "apple-touch-icon.png"
+    fig.savefig(path, dpi=dpi, facecolor=PAPER)
+    plt.close(fig)
+    return path
+
+
+FIGURES = (
+    fig_example_pipeline,
+    fig_cover,
+    fig_icon,
+    fig_touch_icon,
+)
+
+
+def main() -> None:
+    """Regenerate every figure and report where it went."""
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    for make in FIGURES:
+        path = make()
+        assert (
+            path.exists()
+        ), f"Figure function '{make.__name__}' did not write its file."
+        print(f"  wrote {path.relative_to(ROOT)}")
+    print(f"Generated {len(FIGURES)} figures.")
+
+
+if __name__ == "__main__":
+    main()

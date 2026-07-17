@@ -1,0 +1,129 @@
+# Copier configuration for the textbook template.
+#
+# Regenerate a book with `copier copy` and pull later engine fixes with
+# `copier update`. Only files ending in .jinja are rendered; everything else
+# is copied verbatim (see _templates_suffix below), which keeps the brace-heavy
+# build.py and style.css safe.
+
+_subdirectory: template
+_templates_suffix: ".jinja"
+
+# Keep the trailing newline that every source file ends with.
+_envops:
+  keep_trailing_newline: true
+
+# Housekeeping the generated book never needs.
+_exclude:
+  - "copier.yml"
+  - "~*"
+  - "__pycache__"
+  - "*.pyc"
+  - ".git"
+  - ".DS_Store"
+
+_message_after_copy: |
+  Your book "{{ book_title }}" is scaffolded in {{ _copier_conf.dst_path }}.
+
+  Next:
+    cd {{ _copier_conf.dst_path }}
+    pip install markdown pymdown-extensions pygments matplotlib
+    python figures/make_figures.py && python build.py
+    python -m http.server -d docs        # preview at http://localhost:8000
+
+  Then read CLAUDE.md, replace the example Part/chapter in toc.py, and see
+  DEPLOY.md to publish to GitHub Pages. The book is marked DRAFT (noindex) and
+  discloses that it is AI-generated in the README and preface — keep that.
+
+# --- Identity -------------------------------------------------------------
+
+book_title:
+  type: str
+  help: "The book's full title (e.g. 'Foundation Models for Biology')."
+
+book_subtitle:
+  type: str
+  help: "One-line subtitle shown under the title and in the sidebar."
+
+book_description:
+  type: str
+  help: "A short 'this is a book about ...' clause, used in CLAUDE.md and metadata (e.g. 'how foundation models are applied to biology')."
+
+audience:
+  type: str
+  help: "One or two sentences describing the reader you are writing for."
+  default: "A curious reader who knows the basics of the adjacent field and wants the load-bearing picture of this one."
+
+author:
+  type: str
+  help: "Your name, shown in the AI-generated disclosure."
+
+github_user:
+  type: str
+  help: "The GitHub account or org that will host the book's repo."
+  default: "zorian15"
+
+slug:
+  type: str
+  help: "URL/repo slug and project directory name (lowercase, hyphenated)."
+  default: "{{ book_title|lower|replace(' ', '-')|replace(':', '')|replace(',', '')|replace('.', '') }}"
+
+repo_url:
+  type: str
+  help: "The book's GitHub repository URL (no trailing .git)."
+  default: "https://github.com/{{ github_user }}/{{ slug }}"
+
+# --- Look and framing -----------------------------------------------------
+
+book_brand_html:
+  type: str
+  help: "Title as it appears in the sidebar header; add a literal <br> to control the line break (e.g. 'Foundation Models<br>for Biology')."
+  default: "{{ book_title }}"
+
+apple_web_app_title:
+  type: str
+  help: "Short home-screen app title for iOS (keep it under ~12 chars, e.g. 'FM Bio')."
+  default: "{{ book_title }}"
+
+meta_description:
+  type: str
+  help: "The <meta name=description> text for search/social previews."
+  default: "A textbook on {{ book_description }}."
+
+callout_title:
+  type: str
+  help: "Title for the amber 'probe' callout — the pointed question box (e.g. 'Interview', 'Collaborator', 'Skeptic')."
+  default: "Collaborator"
+
+quiz_intro_framing:
+  type: str
+  help: "Lead clause of the end-of-chapter quiz intro; it is followed by '... chapter. Pick an answer to see whether it holds up.'"
+  default: "Questions a sharp reviewer might ask on this"
+
+# --- Features -------------------------------------------------------------
+
+use_glossary:
+  type: bool
+  help: "Include an auto-built glossary appendix (glossary.py + a define-on-first-use convention)?"
+  default: true
+
+# --- Deployment / integration (safe to leave at defaults) -----------------
+
+site_name:
+  type: str
+  help: "If folding this book into a wider personal site, its name (adds a back-link). Leave empty for a standalone book."
+  default: ""
+
+site_url:
+  type: str
+  help: "The wider site's URL. Set together with site_name, or leave both empty."
+  default: ""
+
+canonical_base:
+  type: str
+  help: "The book's canonical address (e.g. https://{{ github_user }}.github.io/{{ slug }}). Leave empty to set it later; emits canonical + Open Graph tags when set."
+  default: ""
+
+draft:
+  type: bool
+  help: "Start in draft mode? While true, every page carries noindex so search engines skip it."
+  default: true

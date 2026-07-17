@@ -1,0 +1,53 @@
+This is a working textbook about {{ book_title }}.
+Replace this preface with your own: say what the book covers, who it is for, and what a reader should be able to do by the end.
+The paragraphs below are a scaffold — keep the callout tour and the two notes at the bottom, and rewrite the rest.
+
+## What this book assumes
+
+State the background you take for granted, and the background you do not.
+Where a concept matters and the reader may not have it, the book teaches it — in enough depth to reason correctly and no more.
+
+The goal is not encyclopedic coverage.
+It is the *load-bearing* set of ideas: the ones that actually come up when you use this material to make a decision.
+
+## How to read it
+
+The callouts do specific jobs, and you can lean on them:
+
+!!! intuition "Intuition"
+    The one-sentence mental model. If you remember nothing else from a section, remember the intuition box.
+
+!!! analogy "Analogy"
+    A concrete comparison. Analogies are lies that fit in your head; each one leaks somewhere, and we say where.
+
+!!! probe "{{ callout_title }}"
+    A pointed question a sharp reader — an interviewer, a collaborator, a skeptic — would put to you, and the crisp answer behind it.
+
+!!! note "Note"
+    A useful detail that would otherwise interrupt the flow.
+
+!!! warning "Common trap"
+    A place people reliably get it wrong.
+{% if use_glossary %}
+Every jargon term is defined the first time it appears, and collected in the glossary at the back.
+{% endif %}
+!!! warning "This book is AI-generated"
+    Every chapter here was drafted by a large language model and then checked against the primary literature it cites.
+    {{ author }} commissioned and edited it as a way to learn this subject by synthesizing the current sources, in a field {{ author }} does not yet work in hands-on.
+    That origin has consequences worth stating plainly:
+
+    - **It can be confidently wrong.** Where a claim matters to you, follow the citation to the source. Citations are verified against the real papers, but interpretation can still err.
+    - **It reflects a snapshot in time.** Fast-moving fields drift; treat dated specifics as of the drafting date, not today.
+    - **It is a learning artifact, not an authority.** The aim is an honest, well-sourced synthesis to learn from — not a substitute for the papers, textbooks, and practitioners it points to.
+
+    If you find an error, the source repository is the place to raise it.
+
+## A note on how this book is made
+
+This is a folder of linked HTML files generated from Markdown by a small Python build.
+The table of contents lives in one file (`toc.py`); the prose lives in `content/`.
+A chapter that is not written yet renders as a navigable stub from its planned outline, so the whole book is always browsable.
+See `CLAUDE.md` for the authoring workflow.
+
+Nothing here is final.
+It is a scaffold meant to be argued with, corrected, and filled in.

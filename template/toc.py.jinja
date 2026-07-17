@@ -1,0 +1,126 @@
+"""Single source of truth for the book's structure.
+
+`build.py` imports `BOOK` from this module and generates one HTML file per
+entry, plus the landing page. To reorder, rename, or add a chapter, edit this
+file and rerun the build. If a chapter has a matching `content/<slug>.md`, that
+prose is rendered; otherwise a stub page is synthesized from the `outline`
+declared here, so the whole book is always navigable even before it is written.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Chapter:
+    """One page of the book.
+
+    `slug` is the file stem (used for `content/<slug>.md` and `<slug>.html`).
+    `label` is the display number shown in navigation and section numbering:
+    a digit for chapters, a letter for appendices, or an empty string for
+    unnumbered front matter. `outline` is a list of (section_title, note)
+    pairs describing what the chapter should eventually cover; it is only used
+    to synthesize the stub when no drafted markdown exists yet.
+    """
+
+    slug: str
+    label: str
+    title: str
+    outline: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True)
+class Part:
+    """A titled group of chapters, rendered as a heading in the sidebar."""
+
+    title: str
+    chapters: tuple[Chapter, ...]
+
+
+# Front matter sits outside any part and is unnumbered.
+PREFACE = Chapter(
+    slug="preface",
+    label="",
+    title="Preface",
+    outline=(),
+)
+
+
+# One worked Part with two chapters: `introduction` has no content file, so it
+# renders as a navigable stub from its outline (delete the outline once drafted);
+# `transformer` has a drafted content/transformer.md that shows every feature —
+# callouts, a figure, a citation, and a quiz. Replace all of this with the real
+# structure of your book.
+BOOK: tuple[Part, ...] = (
+    Part(
+        title="I · Foundations",
+        chapters=(
+            Chapter(
+                slug="introduction",
+                label="1",
+                title="Introduction",
+                outline=(
+                    (
+                        "What this book covers",
+                        "The scope, the audience, and the through-line the "
+                        "chapters follow.",
+                    ),
+                    (
+                        "How to read it",
+                        "Where to start, and how the parts build on each other.",
+                    ),
+                ),
+            ),
+            Chapter(
+                slug="transformer",
+                label="2",
+                title="The Transformer",
+                outline=(
+                    (
+                        "Self-attention",
+                        "How each position attends to every other, and what it "
+                        "costs.",
+                    ),
+                    (
+                        "Putting it together",
+                        "Multi-head attention, positional information, and the "
+                        "causal mask.",
+                    ),
+                ),
+            ),
+        ),
+    ),
+)
+
+
+{%- if use_glossary %}
+# Appendices are chapters with letter labels. The glossary appendix is generated
+# from glossary.py (it has no content file and no outline); build.py special-cases
+# its slug.
+APPENDICES: tuple[Chapter, ...] = (
+    Chapter(
+        slug="glossary",
+        label="A",
+        title="Glossary",
+        outline=(),
+    ),
+)
+{%- else %}
+# Appendices are chapters with letter labels (a reference page, further reading,
+# and so on). None yet; add Chapter(...) entries with letter labels as needed.
+APPENDICES: tuple[Chapter, ...] = ()
+{%- endif %}
+
+
+def all_pages() -> tuple[Chapter, ...]:
+    """Return every page in reading order: preface, chapters, then appendices."""
+    pages: list[Chapter] = [PREFACE]
+    for part in BOOK:
+        pages.extend(part.chapters)
+    pages.extend(APPENDICES)
+    slugs = [page.slug for page in pages]
+    assert len(slugs) == len(
+        set(slugs)
+    ), "Duplicate slug detected in the table of contents."
+    return tuple(pages)

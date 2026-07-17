@@ -1,0 +1,62 @@
+"""Single source of truth for the book's glossary.
+
+The convention is: **every term or abbreviation is defined inline the first time
+it appears in the prose, and also added here**. `build.py` renders the
+`glossary` appendix from `GLOSSARY`, alphabetically.
+
+Keep each definition to one or two plain sentences aimed at the book's reader —
+enough to unblock them, not a textbook entry. Cross-reference other terms by
+name rather than restating them.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Term:
+    """One glossary entry.
+
+    `term` is shown as written (keep the canonical casing, e.g. "RNA-seq");
+    sorting is case-insensitive. `definition` is one or two plain sentences.
+    """
+
+    term: str
+    definition: str
+
+    def __post_init__(self) -> None:
+        assert self.term.strip(), "Glossary term is empty."
+        assert self.definition.strip(), f"Term {self.term!r} has an empty definition."
+        assert not self.term.startswith(" "), f"Term {self.term!r} has leading space."
+
+
+# A couple of worked entries so a drafter has a pattern to copy. Grow this as
+# chapters are drafted — the convention is: define on first use, add here.
+_TERMS: tuple[Term, ...] = (
+    Term(
+        "Foundation model",
+        "A model pretrained once on a broad corpus with a self-supervised objective, then adapted to many downstream tasks rather than trained from scratch for each one.",
+    ),
+    Term(
+        "Self-supervised learning",
+        "Training where the label comes from the data itself (for example, mask part of the input and predict it), so no human annotation is needed.",
+    ),
+    Term(
+        "Self-attention",
+        "The operation by which each position in a sequence reads a weighted blend of every other position, letting a token's representation depend on its context.",
+    ),
+)
+
+
+def _sorted(terms: tuple[Term, ...]) -> tuple[Term, ...]:
+    """Return terms sorted case-insensitively, failing on duplicates."""
+    seen: set[str] = set()
+    for term in terms:
+        key = term.term.lower()
+        assert key not in seen, f"Duplicate glossary term: {term.term!r}."
+        seen.add(key)
+    return tuple(sorted(terms, key=lambda t: t.term.lower()))
+
+
+GLOSSARY: tuple[Term, ...] = _sorted(_TERMS)
