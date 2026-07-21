@@ -19,9 +19,13 @@ Scoring every query against every key produces an n-by-n matrix for a sequence o
 !!! analogy "Analogy"
     Think of a room where everyone can hear everyone at once. Perfect information, but the number of conversations grows with the square of the crowd — which is exactly why large rooms need structure.
 
+<figure class="widget" data-widget="example-slider">
+<figcaption>An interactive figure: drag the slider to change the coefficient a and watch the parabola y = a x² — the same square-law growth that makes attention quadratic. This is the template's one worked widget; replace it (and its entry in assets/widgets.js) with figures that fit your book, or delete it if your book has no interactive figures.</figcaption>
+</figure>
+
 <figure>
 <img src="assets/figures/example-pipeline.svg" alt="Three boxes left to right connected by arrows: an input box, a model box, and an output box.">
-<figcaption>The shape of a chapter in this book: an input, the method under study, and the output it produces. Replace this figure with one that fits your subject.</figcaption>
+<figcaption>A static figure, for comparison: an input, the method under study, and the output it produces. Replace this figure with one that fits your subject.</figcaption>
 </figure>
 
 ## Putting it together

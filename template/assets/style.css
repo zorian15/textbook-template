@@ -899,3 +899,77 @@ article th {
         transition: none;
     }
 }
+
+/* ---- Interactive figures (widgets) ------------------------------------- */
+
+/* An interactive figure is a normal <figure>, so it inherits figure spacing
+   and its <figcaption> numbers like any other. The widget runtime (assets/
+   widgets.js) injects the canvas and controls above the caption. */
+figure.widget {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--paper);
+    padding: 0.9rem 0.9rem 0.4rem;
+}
+
+.widget-canvas {
+    display: block;
+    width: 100%;
+    touch-action: manipulation;
+}
+
+.widget-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    margin: 0.6rem 0 0.2rem;
+}
+
+.widget-slider {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1 1 15rem;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+}
+
+.widget-slider-label {
+    white-space: nowrap;
+}
+
+.widget-slider input[type="range"] {
+    flex: 1 1 auto;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.widget-readout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.2rem;
+    margin: 0.2rem 0 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+}
+
+.widget-num {
+    white-space: nowrap;
+}
+
+.widget-button {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--accent);
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    padding: 0.25rem 0.7rem;
+    cursor: pointer;
+}
+
+.widget-button:hover {
+    background: var(--accent-soft);
+}

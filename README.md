@@ -15,8 +15,10 @@ incidental — see `CLAUDE.md` for that design note.
 
 - A static-site generator (`build.py`) with per-chapter navigation, section and
   figure numbering, `[@key]` citations resolved from a single source of truth,
-  interactive end-of-chapter quizzes, an optional auto-built glossary, and a
-  responsive, offline-first design (no web fonts, no CDN except MathJax).
+  interactive end-of-chapter quizzes, an optional auto-built glossary, an
+  interactive-figure runtime for slider-driven widgets (`assets/widgets.js`,
+  dependency-free and offline), and a responsive, offline-first design (no web
+  fonts, no CDN except MathJax).
 - A GitHub Actions workflow that rebuilds and deploys to GitHub Pages on push.
 - A comprehensive authoring guide (`CLAUDE.md`) covering voice, callouts,
   citations, sourcing/verification, figures, and a subagent drafting+verification

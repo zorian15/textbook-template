@@ -362,6 +362,32 @@ The `!!! figure` admonition still exists as a *placeholder* for a figure that
 has not been drawn yet: it renders as a dashed box describing what to draw.
 Replace placeholders with real `<figure>` blocks as you go.
 
+### Interactive figures
+
+Some ideas land far better when the reader can *move* them — shrink a gap and
+watch a limit form, slide a parameter and watch a distribution shift. Those are
+**widgets**: small, dependency-free, offline canvases wired up by
+`assets/widgets.js` (no CDN, no framework). A widget is a normal `<figure>`, so
+it numbers and captions like any other figure:
+
+```html
+<figure class="widget" data-widget="my-widget">
+<figcaption>Say what the reader should do and what they should notice.</figcaption>
+</figure>
+```
+
+To add one, write a `WIDGETS["my-widget"] = function (figure, cap) { ... }` in
+`assets/widgets.js` using the runtime helpers already there (`makeCanvas`,
+`addSlider`, `controlsBox`, `readoutBox`, `drawAxes`, `plotFn`, `dot`); the
+runtime finds every `figure.widget[data-widget]` on load and calls the matching
+builder. `build.py` injects `widgets.js` on every chapter page (it is a no-op on
+pages with no widgets) and asserts the file exists. Colors live in a `C` object
+that mirrors the CSS palette — keep them in sync. `assets/widgets.js` ships one
+worked example (`example-slider`, used in the sample chapter); copy it, rename
+it, and delete the example once you have real widgets. Reach for a widget only
+when interactivity teaches something a static figure cannot; most figures should
+stay static.
+
 ## Code preferences for `build.py` and `toc.py`
 
 The author writes research code and values correctness above all:

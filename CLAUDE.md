@@ -1,12 +1,17 @@
 # CLAUDE.md — textbook template (design note)
 
-**Status: BUILT (v1.1.0), extracted at N=2 from `../llm-textbook` and
-`../foundation-models-bio`; first exercised by `../calculus-intuitively`.** The
-working [copier](https://copier.app/) template lives in `template/` with its
-questions in `copier.yml`; `README.md` is the user-facing guide. Engine changes
-are tagged (semver) and pulled into books with `copier update`; v1.1.0 bumped the
-`deploy.yml` GitHub Actions to their Node-24 majors (checkout v5, setup-python
-v6, configure-pages v6, upload-pages-artifact v5, deploy-pages v5). This file is kept as the *design rationale* — why copier, the
+**Status: BUILT (v1.2.0), extracted at N=2 from `../llm-textbook` and
+`../foundation-models-bio`; exercised by `../calculus-intuitively` and
+`../shape-of-statistical-theory`.** The working [copier](https://copier.app/)
+template lives in `template/` with its questions in `copier.yml`; `README.md` is
+the user-facing guide. Engine changes are tagged (semver) and pulled into books
+with `copier update`. Releases: v1.1.0 bumped the `deploy.yml` GitHub Actions to
+their Node-24 majors. v1.2.0 promoted the **interactive-figure engine**
+(`assets/widgets.js` runtime + `build.py` injection + `.widget` CSS + one worked
+`example-slider` widget) after it proved out, hand-added, in the calculus and
+statistics books — the N=2-for-widgets signal. Existing books already carry a
+hand-added copy of the engine, so they do not need this update; new books get it
+built in. This file is kept as the *design rationale* — why copier, the
 engine/content seam, the repo-topology decision, and the conventions promoted
 into the template. Read `README.md` to use the template; read on here for why it
 is shaped the way it is.
